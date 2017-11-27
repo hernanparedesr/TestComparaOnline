@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+var bd=require('./start_server');
 
 /**
  * Module dependencies.
@@ -12,7 +13,7 @@ var http = require('http');
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '5858');
+var port = normalizePort(process.env.PORT || '6060');
 app.set('port', port);
 
 /**
@@ -21,41 +22,18 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
-/**
- * Connection to database.
- */
-var pg = require('pg');
-var conString = "microservicio://compara:compara123@localhost/microservicio";
+
 
 /**
  * Listen on provided port, on all network interfaces.
  */
 server.listen(port, function(){
   
-  var client = new pg.Client(conString);
-  client.connect();
-
-  const fetch = require("node-fetch");
-  const dolar_today =
-  "http://api.sbif.cl/api-sbifv3/recursos_api/dolar?apikey=2a5a92298fecf09c1472b9e657b5e856709303fe&formato=json";
-  
-
-  fetch(dolar_today)
-  .then(response => {
-    response.json().then(json => {
-
-      var value = json.Dolares[0].Valor;
-      var date = json.Dolares[0].Fecha;
-      client.query('INSERT into dolar_value (value, date) VALUES($1, $2)', [value, date]);
-      var hoy = new Date().toJSON().slice(0,10);
-      console.log(hoy);
-    });
-  })
-  .catch(error => {
-    console.log(error);
-  });
-  
-  console.log("Servidor de MoneyApp está listo en " + this.address().port);
+  /**
+ * De start_server se inicia el servidor y automaticamente guarda 
+ * datos desde la api (solo si el registro de la fecha actual no existe).
+ */
+  bd.start();
 
 });
 server.on('error', onError);
